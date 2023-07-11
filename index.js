@@ -141,8 +141,8 @@ app.put('/storeRandomString/:email', async (req, res) => {
 // send email
 app.post('/sendEmail', async (req, res) => {
     const emailInfo={
-        receiverEmail:'rohit10231@gmail.com',
-        text:`You password reset code: ${req.body.verificationRandomString}`
+        text:`You password reset code: ${req.body.verificationRandomString}`,
+        userEmail:req.body.userEmail
     }
     // let config = {
     //     service: "gmail",
@@ -161,7 +161,7 @@ app.post('/sendEmail', async (req, res) => {
 
     let info = await transporter.sendMail({
         from: '"Password Reset Flow Team" <password.reset@gmail.com>', // sender address
-        to:emailInfo.receiverEmail, // list of receivers
+        to:emailInfo.userEmail, // list of receivers
         subject: "Password Reset Code", // Subject line
         text: emailInfo.text, // plain text body
         html: `<b>${emailInfo.text}</b><br/><b>${emailInfo.text}</b><br/><b>Valid for 5 minutes</b>`, // html body
