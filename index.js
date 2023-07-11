@@ -15,7 +15,12 @@ app.get('/', async (req, res) => {
     try {
         const db = await client.db('Password_Reset_Flow')
         let users = await db.collection('All_Users').find().toArray()
-        res.status(200).send(users)
+        if (users.length !== 0) {
+            res.status(200).send(users)
+        }
+        else {
+            res.send({ message: 'No users found' })
+        }
     }
     catch (error) {
         console.log(error);
@@ -31,7 +36,7 @@ app.post('/signup', async (req, res) => {
     const client = await MongoClient.connect(dbUrl)
     try {
         const db = await client.db('Password_Reset_Flow')
-        let user = await db.collection('All_Users').findOne({ email: req.body.email })
+        let user = await db.collection('All_Users').aggregate([{ $match: { email: req.body.email } }]).toArray()
         if (user.length === 0) {
             await db.collection('All_Users').insertOne(req.body)
             res.status(201).send({ message: 'New account created', data: req.body })
@@ -54,7 +59,7 @@ app.get('/login/:email/:password', async (req, res) => {
     const client = await MongoClient.connect(dbUrl)
     try {
         const db = await client.db('Password_Reset_Flow')
-        let user = await db.collection('All_Users').findOne({ email: req.params.email, password: req.params.password })
+        let user = await db.collection('All_Users').aggregate([{ $match: { email: req.params.email, password: req.params.password } }]).toArray()
         if (user.length !== 0) {
             res.status(200).send({ message: 'Login successful', data: user })
         }
@@ -76,8 +81,8 @@ app.get('/getUser/:email', async (req, res) => {
     const client = await MongoClient.connect(dbUrl)
     try {
         const db = await client.db('Password_Reset_Flow')
-        let user = await db.collection('All_Users').findOne({ email: req.params.email })
-        if (user) {
+        let user = await db.collection('All_Users').aggregate([{ $match: { email: req.params.email } }]).toArray()
+        if (user.length !== 0) {
             res.status(200).send({ message: 'user found', data: user })
         }
         else {
@@ -98,7 +103,7 @@ app.put('/changePassword/:email', async (req, res) => {
     const client = await MongoClient.connect(dbUrl)
     try {
         const db = await client.db('Password_Reset_Flow')
-        let user = await db.collection('All_Users').findOne({ email: req.params.email })
+        let user = await db.collection('All_Users').aggregate([{ $match: { email: req.params.email } }]).toArray()
         if (user.length !== 0) {
             let user = await db.collection('All_Users').updateOne({ email: req.params.email }, { $set: req.body })
             res.status(200).send({ message: 'Password changed' })
@@ -120,14 +125,8 @@ app.put('/storeRandomString/:email', async (req, res) => {
     const client = await MongoClient.connect(dbUrl)
     try {
         const db = await client.db('Password_Reset_Flow')
-        // let user = await db.collection('All_Users').findOne({ email: req.params.email })
-        // if (user) {
         let randomString = await db.collection('All_Users').updateOne({ email: req.params.email }, { $set: req.body })
         res.status(200).send({ message: 'Random string saved successfully', data: randomString })
-        // }
-        // else {
-        //     res.status(404).send({ message: "User Not Found" })
-        // }
     }
     catch (error) {
         res.status(400).send({ message: 'Internal server error', error })
