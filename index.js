@@ -9,7 +9,9 @@ const dbUrl = 'mongodb+srv://rohit10231:rohitkaranpujari@cluster0.kjynvxt.mongod
 const client = new MongoClient(dbUrl)
 const port = 5000
 
-// getting All_Users information
+const nodemailer = require('nodemailer')
+
+// getting all users information
 app.get('/', async (req, res) => {
     const client = await MongoClient.connect(dbUrl)
     try {
@@ -134,6 +136,39 @@ app.put('/storeRandomString/:email', async (req, res) => {
     finally {
         client.close()
     }
+})
+
+// send email
+app.post('/sendEmail', async (req, res) => {
+    const emailInfo={
+        receiverEmail:'rohit10231@gmail.com',
+        text:`You password reset code: jhjh`
+    }
+    // let config = {
+    //     service: "gmail",
+    //     auth: {
+    //         user: 'rpujari1144@gmail.com',
+    //         pass: 'roaklhqwpybvxjzi'
+    //     }
+    // }
+    const transporter = await nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: 'rpujari1144@gmail.com',
+            pass: 'roaklhqwpybvxjzi'
+        }
+    });
+
+    let info = await transporter.sendMail({
+        from: '"Password Reset Flow Team" <password.reset@gmail.com>', // sender address
+        to:emailInfo.receiverEmail, // list of receivers
+        subject: "Password Reset Code", // Subject line
+        text: emailInfo.text, // plain text body
+        html: `<b>${emailInfo.text}</b><br/><b>${emailInfo.text}</b><br/><b>Valid for 5 minutes</b>`, // html body
+    })
+
+    console.log("Message sent: %s", info.messageId);
+    res.json(info)
 })
 
 app.listen(port, () => { console.log(`App listening on ${port}`) })
