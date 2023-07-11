@@ -142,7 +142,7 @@ app.put('/storeRandomString/:email', async (req, res) => {
 app.post('/sendEmail', async (req, res) => {
     const emailInfo={
         receiverEmail:'rohit10231@gmail.com',
-        text:`You password reset code: jhjh`
+        text:`You password reset code: ${req.body.verificationRandomString}`
     }
     // let config = {
     //     service: "gmail",
