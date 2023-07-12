@@ -122,22 +122,6 @@ app.put('/changePassword/:email', async (req, res) => {
     }
 })
 
-// storing random string
-app.put('/storeRandomString/:email', async (req, res) => {
-    const client = await MongoClient.connect(dbUrl)
-    try {
-        const db = await client.db('Password_Reset_Flow')
-        let randomString = await db.collection('All_Users').updateOne({ email: req.params.email }, { $set: req.body })
-        res.status(200).send({ message: 'Random string saved successfully', data: randomString })
-    }
-    catch (error) {
-        res.status(400).send({ message: 'Internal server error', error })
-    }
-    finally {
-        client.close()
-    }
-})
-
 // send email
 app.post('/sendEmail', async (req, res) => {
     var verificationString
