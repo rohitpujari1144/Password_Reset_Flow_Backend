@@ -144,13 +144,6 @@ app.post('/sendEmail', async (req, res) => {
         text:`You password reset code: ${req.body.verificationRandomString}`,
         userEmail:req.body.userEmail
     }
-    // let config = {
-    //     service: "gmail",
-    //     auth: {
-    //         user: 'rpujari1144@gmail.com',
-    //         pass: 'roaklhqwpybvxjzi'
-    //     }
-    // }
     const transporter = await nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -164,7 +157,7 @@ app.post('/sendEmail', async (req, res) => {
         to:emailInfo.userEmail, // list of receivers
         subject: "Password Reset Code", // Subject line
         text: emailInfo.text, // plain text body
-        html: `<b>${emailInfo.text}</b><br/><b>${emailInfo.text}</b><br/><b>Valid for 5 minutes</b>`, // html body
+        html: `<b>${emailInfo.text}</b><br/><b>Valid for 5 minutes</b>`, // html body
     })
 
     console.log("Message sent: %s", info.messageId);
