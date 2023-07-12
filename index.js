@@ -111,7 +111,7 @@ app.put('/changePassword/:email', async (req, res) => {
             res.status(200).send({ message: 'Password changed' })
         }
         else {
-            res.status(404).send({ message: "User Not Found" })
+            res.send({ message: "User Not Found" })
         }
     }
     catch (error) {
@@ -140,28 +140,60 @@ app.put('/storeRandomString/:email', async (req, res) => {
 
 // send email
 app.post('/sendEmail', async (req, res) => {
-    const emailInfo={
-        text:`You password reset code: ${req.body.verificationRandomString}`,
-        userEmail:req.body.userEmail
-    }
-    const transporter = await nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: 'rpujari1144@gmail.com',
-            pass: 'roaklhqwpybvxjzi'
+    var verificationString
+    randomStringGenerator()
+    async function randomStringGenerator() {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        function generateString(length) {
+            let result = '';
+            const charactersLength = characters.length;
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
         }
-    });
+        verificationString = await generateString(10);
 
-    let info = await transporter.sendMail({
-        from: '"Password Reset Flow Team" <password.reset@gmail.com>', // sender address
-        to:emailInfo.userEmail, // list of receivers
-        subject: "Password Reset Code", // Subject line
-        text: emailInfo.text, // plain text body
-        html: `<b>${emailInfo.text}</b><br/><b>Valid for 5 minutes</b>`, // html body
-    })
+        const emailInfo = {
+            text: `You password reset code: ${verificationString}`
+        }
+        const transporter = await nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: 'rpujari1144@gmail.com',
+                pass: 'roaklhqwpybvxjzi'
+            }
+        });
 
-    console.log("Message sent: %s", info.messageId);
-    res.json(info)
+        let info = await transporter.sendMail({
+            from: '"Password Reset Flow Team" <password.reset@gmail.com>', // sender address
+            to: req.body.userEmail, // list of receivers
+            subject: "Password Reset Code", // Subject line
+            // text: `You password reset code: ${verificationString}`, // plain text body
+            html: `<b>${emailInfo.text}</b><br/><b>Valid for 5 minutes</b>`, // html body
+        })
+
+        console.log("Message sent: %s", info.messageId);
+        res.json(info)
+
+        const client = await MongoClient.connect(dbUrl)
+        try {
+            const db = await client.db('Password_Reset_Flow')
+            const passwordResetString = {
+                randomString: verificationString
+            }
+            let randomString = await db.collection('All_Users').updateOne({ email: req.body.userEmail }, { $set: passwordResetString })
+            res.status(200).send({ message: 'Random string saved successfully', data: randomString })
+        }
+        catch (error) {
+            res.status(400).send({ message: 'Internal server error', error })
+        }
+        finally {
+            client.close()
+        }
+    }
+
+
 })
 
 app.listen(port, () => { console.log(`App listening on ${port}`) })
